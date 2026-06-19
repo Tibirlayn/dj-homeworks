@@ -1,4 +1,5 @@
-from django.shortcuts import render
+from django.shortcuts import render, reverse
+
 
 DATA = {
     'omlet': {
@@ -19,12 +20,32 @@ DATA = {
     # можете добавить свои рецепты ;)
 }
 
-# Напишите ваш обработчик. Используйте DATA как источник данных
-# Результат - render(request, 'calculator/index.html', context)
-# В качестве контекста должен быть передан словарь с рецептом:
-# context = {
-#   'recipe': {
-#     'ингредиент1': количество1,
-#     'ингредиент2': количество2,
-#   }
-# }
+def home_view(request):
+    template_name = 'calculator/home.html'
+
+    pages = {
+        'Омлет': reverse('recipe_view', kwargs={'recipe_name': 'omlet'}),
+        'Паста': reverse('recipe_view', kwargs={'recipe_name': 'pasta'}),
+        'Бутерброд': reverse('recipe_view', kwargs={'recipe_name': 'buter'})
+    }
+    
+    context = {
+        'pages': pages
+    }
+    return render(request, template_name, context)
+
+def recipe_view(request, recipe_name):
+    # Получаем количество порций из GET-запроса (например, /omlet/?servings=5)
+    # Если параметр не передан, по умолчанию берем 1 порцию
+    servings = int(request.GET.get('servings', 1))
+    
+    # Достаем рецепт из нашего словаря DATA
+    recipe = DATA.get(recipe_name)
+    
+    context = {}
+    if recipe:
+        # Умножаем количество каждого ингредиента на количество порций
+        scaled_recipe = {ingredient: amount * servings for ingredient, amount in recipe.items()}
+        context['recipe'] = scaled_recipe
+
+    return render(request, 'calculator/index.html', context)
