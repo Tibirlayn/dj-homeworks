@@ -40,6 +40,10 @@ class AdvertisementSerializer(serializers.ModelSerializer):
     def validate(self, data):
         """Метод для валидации. Вызывается при создании и обновлении."""
 
-        # TODO: добавьте требуемую валидацию
+        if self.context['request'].method == 'POST' or data.get('status') == 'OPEN':
+            user = self.context['request'].user
+            count = Advertisement.objects.filter(creator=user, status='OPEN').count()
+            if count >= 10:
+                raise serializers.ValidationError("You cannot have more than 10 open advertisements.")
 
         return data
